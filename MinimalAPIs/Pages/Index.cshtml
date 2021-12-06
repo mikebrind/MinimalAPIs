@@ -4,7 +4,25 @@
     ViewData["Title"] = "Home page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<div class="results"><ul></ul></div>
+<button class="btn btn-primary" id="get-cars">Click</button>
+@section scripts{
+    <script>
+        const list = document.querySelector('.results ul');
+        console.log(list);
+        const button = document.getElementById('get-cars');
+        console.log(button);
+        button.addEventListener('click', ()=>{
+            console.log('click');
+            fetch("/api/cars")
+            .then(response => response.json())
+            .then(cars => {
+                for(let i =0;i< cars.length;i++){
+                    let item = document.createElement('li');
+                    item.innerText =  `${cars[i].id} ${cars[i].make}`;
+                    list.appendChild(item);
+                }
+            });
+        });
+    </script>
+}

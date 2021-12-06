@@ -1,4 +1,4 @@
-using MinimalAPIs.Service;
+using MinimalAPIs.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,5 +24,11 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.MapRazorPages();
+
+app.MapGet("/api/cars",  (ICarService service) =>
+{
+    var cars = service.ReadAll();
+    return Results.Ok(cars);
+});
 
 app.Run();

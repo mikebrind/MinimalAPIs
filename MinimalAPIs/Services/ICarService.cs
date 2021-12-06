@@ -1,6 +1,6 @@
 ﻿using MinimalAPIs.Models;
 
-namespace MinimalAPIs.Service;
+namespace MinimalAPIs.Services;
 
 public interface ICarService
 {
