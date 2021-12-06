@@ -1,7 +1,10 @@
+using MinimalAPIs.Service;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+builder.Services.AddSingleton<ICarService, CarService>();
 
 var app = builder.Build();
 
