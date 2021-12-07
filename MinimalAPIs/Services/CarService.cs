@@ -15,6 +15,10 @@ public class CarService : ICarService
                 cars.Remove(carToUpdate);
             }
         }
+        else
+        {
+            car.Id = cars.Max(c => c.Id) + 1;
+        }
         cars.Add(car);
     } 
 

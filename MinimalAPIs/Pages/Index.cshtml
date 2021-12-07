@@ -24,12 +24,13 @@
         });
 
         const showCars = () => {
+            list.innerHTML = '';
             fetch("/api/cars")
             .then(response => response.json())
             .then(cars => {
                 for(let i = 0;i < cars.length;i++){
                     let item = document.createElement('li');
-                    item.innerText =  `${cars[i].id} ${cars[i].make}`;
+                    item.innerText =  `${cars[i].id} ${cars[i].make} ${cars[i].model} `;
                     item.classList.add('edit-car');
                     item.dataset.id = cars[i].id;
                     list.appendChild(item);
@@ -53,6 +54,7 @@
                     "Content-type": "application/json",
                 },
                 body: JSON.stringify(model)
+            });
         };
     </script>
 }
