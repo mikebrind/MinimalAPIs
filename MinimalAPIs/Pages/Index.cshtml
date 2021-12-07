@@ -3,26 +3,56 @@
 @{
     ViewData["Title"] = "Home page";
 }
+<button class="btn btn-primary" id="get-cars">Get Cars</button> 
+<button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#car-modal">New Car</button>
+<ul class="results mt-3"></ul>
+<partial name="_CarModal" model="new Car()"/>
 
-<div class="results"><ul></ul></div>
-<button class="btn btn-primary" id="get-cars">Click</button>
+
+
 @section scripts{
     <script>
-        const list = document.querySelector('.results ul');
-        console.log(list);
-        const button = document.getElementById('get-cars');
-        console.log(button);
-        button.addEventListener('click', ()=>{
-            console.log('click');
+        const list = document.querySelector('ul.results');
+        const getAll = document.getElementById('get-cars');
+        const save = document.getElementById('save-car');
+        getAll.addEventListener('click', () => {
+            showCars();
+        });
+        save.addEventListener('click', () => {
+            saveCar();
+            showCars();
+        });
+
+        const showCars = () => {
             fetch("/api/cars")
             .then(response => response.json())
             .then(cars => {
-                for(let i =0;i< cars.length;i++){
+                for(let i = 0;i < cars.length;i++){
                     let item = document.createElement('li');
                     item.innerText =  `${cars[i].id} ${cars[i].make}`;
+                    item.classList.add('edit-car');
+                    item.dataset.id = cars[i].id;
                     list.appendChild(item);
                 }
             });
-        });
+        }
+
+        const saveCar = () => {
+            const model = {
+                id:  document.getElementById('Id').value,
+                model: document.getElementById('Model').value,
+                make: document.getElementById('Make').value,
+                year: document.getElementById('Year').value,
+                doors: document.getElementById('Doors').value,
+                color: document.getElementById('Color').value,
+                price: document.getElementById('Price').value,
+            };
+            fetch('/api/save',  {  
+                method: 'post',
+                headers: {
+                    "Content-type": "application/json",
+                },
+                body: JSON.stringify(model)
+        };
     </script>
 }

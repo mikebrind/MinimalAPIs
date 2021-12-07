@@ -1,3 +1,4 @@
+using MinimalAPIs.Models;
 using MinimalAPIs.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,8 +28,25 @@ app.MapRazorPages();
 
 app.MapGet("/api/cars",  (ICarService service) =>
 {
-    var cars = service.ReadAll();
-    return Results.Ok(cars);
+    return Results.Json(service.GetAll());
+});
+
+app.MapGet("/api/car/{id:int}", (int id, ICarService service) =>
+{
+    var car = service.Get(id);
+    return car;
+});
+
+app.MapMethods("/api/save", new[] {"POST", "PUT"}, (Car car, ICarService service) =>
+{
+    service.Save(car);
+    return Results.Ok();
+});
+
+app.MapPut("/api/save", (Car car, ICarService service) =>
+{
+    service.Save(car);
+    return Results.Ok();
 });
 
 app.Run();

@@ -1,0 +1,42 @@
+﻿@model Car
+<div class="modal fade" tabindex="-1" role="dialog" id="car-modal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Save Car</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input asp-for="Id" type="hidden">
+                <div class="form-group">
+                    <label asp-for="Model"></label>
+                    <input asp-for="Model" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label asp-for="Make"></label>
+                    <input asp-for="Make" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label asp-for="Year"></label>
+                    <input asp-for="Year" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label asp-for="Doors"></label>
+                    <input asp-for="Doors" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label asp-for="Color"></label>
+                    <input asp-for="Color" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label asp-for="Price"></label>
+                    <input asp-for="Price" class="form-control">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="save-car">Save changes</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

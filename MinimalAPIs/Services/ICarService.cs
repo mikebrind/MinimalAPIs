@@ -4,5 +4,7 @@ namespace MinimalAPIs.Services;
 
 public interface ICarService
 {
-    List<Car> ReadAll();
+    List<Car> GetAll();
+    Car Get(int id);
+    void Save(Car car);
 }
