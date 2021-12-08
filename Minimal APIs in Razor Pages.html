@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Minimal APIs in Razor Pages</title>
+  </head>
+  <body>
+    <h1>Using Minimal APIs in ASP.NET Core Razor Pages</h1>
+    <p>I've written before about<a href="https://www.mikesdotnetting.com/article/318/working-with-json-in-razor-pages">
+        working with JSON in Razor Pages</a>. I looked at how to return
+      JsonResult types from Razor page handlers and MVC controllers, along with
+      incorporating Web API controllers in your application. In .NET 6, a new
+      minimal request handler API was introduced, providing an alternative
+      option that can help simplify this process. </p>
+    <p>If you are using ASP.NET Core Razor Pages to develop your web
+      application, you have already decided that the majority of your HTML will
+      be generated on the server. Nevertheless, chances are that you will want
+      to introduce some client side operations into the application to improve
+      its user friendliness in places. If those operations involve data, you
+      will probably want to work with JSON. Up until .NET 6, your options were
+      pretty much restricted to using page handler methods to accept and return
+      JSON, or adding Web API controllers to the application. </p>
+    Returning JsonResults from page handler methods work, but there is something
+    a little hacky about this approach. Razor pages are intended for generating
+    UI, not providing data services over HTTP. Every time you call a page
+    handler method from script, the PageModel and all its dependencies are
+    instantiated, whether they are needed or not. You can use Web API
+    controllers, of course, but they require some additional configuration to
+    get them to work. From .NET 6, you can use a simplified minimal request
+    handler API that works with JSON by default.<br>
+  </body>
+</html>
