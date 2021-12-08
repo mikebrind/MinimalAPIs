@@ -40,12 +40,6 @@ app.MapGet("/api/car/{id:int}", (int id, ICarService service) =>
 app.MapMethods("/api/save", new[] {"POST", "PUT"}, (Car car, ICarService service) =>
 {
     service.Save(car);
-    return Results.Ok(service.GetAll());
-});
-
-app.MapPut("/api/save", (Car car, ICarService service) =>
-{
-    service.Save(car);
     return Results.Ok();
 });
 
