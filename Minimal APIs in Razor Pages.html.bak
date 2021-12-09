@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Minimal APIs in Razor Pages</title>
+  </head>
+  <body>
+    <h1>Using Minimal APIs in ASP.NET Core Razor Pages</h1>
+    <p>If you are using ASP.NET Core Razor Pages to develop your web
+      application, you have already decided that the majority of your HTML will
+      be generated on the server. Nevertheless, chances are that you will want
+      to introduce some client side operations into the application to improve
+      its user friendliness in places. If those operations involve data, you
+      will probably want to work with JSON. From .NET 6, you can use a
+      simplified minimal request handler API that works with JSON by default.</p>
+    <p> Up until .NET 6, your options were pretty much restricted to using page
+      handler methods to accept and return JSON, or adding Web API controllers
+      to the application. Returning <a href="https://www.mikesdotnetting.com/article/318/working-with-json-in-razor-pages">JsonResults
+        from page handler methods</a> work, but there is something a little
+      hacky about this approach. Razor pages are intended for generating UI, not
+      providing data services over HTTP. Every time you call a page handler
+      method from script, the PageModel and all its dependencies are
+      instantiated whether they are needed or not. You can use Web API
+      controllers, of course, but they require some additional configuration to
+      get them to work. </p>
+    <p>Working with minimal API request handlers is designed to provide a low
+      complexity experience. You register request handlers with the <code>Map[HttpMethod]</code>
+      method on <code>WebApplication</code> - <code>MapPost</code>, <code>MapGet</code>,
+      <code>MapPut</code>, and so on, using the same convention that you
+      register page handler methods in a PageModel class. Recall that an
+      instance of the <code>WebApplication</code> type is returned from the <code>builder.Build</code>
+      method call in <i>Program.cs</i> (<a href="https://www.mikesdotnetting.com/article/357/razor-pages-startup-in-net-6https://www.mikesdotnetting.com/article/357/razor-pages-startup-in-net-6">discussed
+        in my previous article</a>). You pass in a route template and a route
+      handler - a standard .NET <code>Delegate</code> that executes when the
+      route matches. This can be a named function or a lambda expression that
+      can take parameters. The route handler can be configured to return one of
+      many built-in response types, including JSON, text, and files. The obvious
+      omission from the built-in return types is HTML.&nbsp; That’s what Razor
+      Pages is for. </p>
+    <p>I've got a simple service that contains some basic CRUD operations
+      against a list of cars:</p>
+    <pre style="font-family:Cascadia Mono;font-size:13px;color:#dadada;background:#1e1e1e;"><span
+style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">class</span>&nbsp;<span
+style="color:#4ec9b0;">CarService</span>&nbsp;<span style="color:gainsboro;">:</span>&nbsp;<span
+style="color:#dcdcaa;">ICarService</span>
+<span style="color:gainsboro;">{</span>
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">public</span>&nbsp;<span style="color:#4ec9b0;">List</span><span
+style="color:gainsboro;">&lt;</span><span style="color:#4ec9b0;">Car</span><span
+style="color:gainsboro;">&gt;</span>&nbsp;<span style="color:#dcdcaa;">GetAll</span><span
+style="color:gainsboro;">()</span>&nbsp;<span style="color:#b4b4b4;">=&gt;</span>&nbsp;<span
+style="color:gainsboro;">cars</span><span style="color:gainsboro;">;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">void</span>&nbsp;<span
+style="color:#dcdcaa;">Save</span><span style="color:gainsboro;">(</span><span style="color:#4ec9b0;">Car</span>&nbsp;<span
+style="color:#9cdcfe;">car</span><span style="color:gainsboro;">)</span>
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:gainsboro;">{</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#d8a0df;">if</span>&nbsp;<span
+style="color:gainsboro;">(</span><span style="color:gainsboro;">car</span><span
+style="color:#b4b4b4;">.</span><span style="color:gainsboro;">Id</span>&nbsp;<span
+style="color:#b4b4b4;">!=</span>&nbsp;<span style="color:#b5cea8;">0</span><span
+style="color:gainsboro;">)</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:gainsboro;">{</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">var</span>&nbsp;<span
+style="color:#9cdcfe;">carToUpdate</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:gainsboro;">cars</span><span style="color:#b4b4b4;">.</span><span style="color:#dcdcaa;">FirstOrDefault</span><span
+style="color:gainsboro;">(</span><span style="color:#9cdcfe;">c</span>&nbsp;<span
+style="color:#b4b4b4;">=&gt;</span>&nbsp;<span style="color:gainsboro;">c</span><span
+style="color:#b4b4b4;">.</span><span style="color:gainsboro;">Id</span>&nbsp;<span
+style="color:#b4b4b4;">==</span>&nbsp;<span style="color:gainsboro;">car</span><span
+style="color:#b4b4b4;">.</span><span style="color:gainsboro;">Id</span><span style="color:gainsboro;">);</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#d8a0df;">if</span>&nbsp;<span
+style="color:gainsboro;">(</span><span style="color:gainsboro;">carToUpdate</span>&nbsp;<span
+style="color:#b4b4b4;">!=</span>&nbsp;<span style="color:#569cd6;">null</span><span
+style="color:gainsboro;">)</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:gainsboro;">{</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+style="color:gainsboro;">cars</span><span style="color:#b4b4b4;">.</span><span style="color:#dcdcaa;">Remove</span><span
+style="color:gainsboro;">(</span><span style="color:gainsboro;">carToUpdate</span><span
+style="color:gainsboro;">);</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:gainsboro;">}</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:gainsboro;">}</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#d8a0df;">else</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:gainsboro;">{</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:gainsboro;">car</span><span
+style="color:#b4b4b4;">.</span><span style="color:gainsboro;">Id</span>&nbsp;<span
+style="color:#b4b4b4;">=</span>&nbsp;<span style="color:gainsboro;">cars</span><span
+style="color:#b4b4b4;">.</span><span style="color:#b8d7a3;">Max</span><span style="color:gainsboro;">(</span><span
+style="color:#9cdcfe;">c</span>&nbsp;<span style="color:#b4b4b4;">=&gt;</span>&nbsp;<span
+style="color:gainsboro;">c</span><span style="color:#b4b4b4;">.</span><span style="color:gainsboro;">Id</span><span
+style="color:gainsboro;">)</span>&nbsp;<span style="color:#b4b4b4;">+</span>&nbsp;<span
+style="color:#b5cea8;">1</span><span style="color:gainsboro;">;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:gainsboro;">}</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:gainsboro;">cars</span><span
+style="color:#b4b4b4;">.</span><span style="color:#dcdcaa;">Add</span><span style="color:gainsboro;">(</span><span
+style="color:gainsboro;">car</span><span style="color:gainsboro;">);</span>
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:gainsboro;">}</span>&nbsp;
+ 
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">public</span>&nbsp;<span style="color:#4ec9b0;">Car</span>&nbsp;<span
+style="color:#dcdcaa;">Get</span><span style="color:gainsboro;">(</span><span style="color:#569cd6;">int</span>&nbsp;<span
+style="color:#9cdcfe;">id</span><span style="color:gainsboro;">)</span>&nbsp;<span
+style="color:#b4b4b4;">=&gt;</span>&nbsp;<span style="color:gainsboro;">cars</span><span
+style="color:#b4b4b4;">.</span><span style="color:#b8d7a3;">FirstOrDefault</span><span
+style="color:gainsboro;">(</span><span style="color:#9cdcfe;">c</span>&nbsp;<span
+style="color:#b4b4b4;">=&gt;</span>&nbsp;<span style="color:gainsboro;">c</span><span
+style="color:#b4b4b4;">.</span><span style="color:gainsboro;">Id</span>&nbsp;<span
+style="color:#b4b4b4;">==</span>&nbsp;<span style="color:gainsboro;">id</span><span
+style="color:gainsboro;">);</span>
+ 
+ 
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">private</span>&nbsp;<span style="color:#4ec9b0">List</span><span
+style="color:gainsboro;">&lt;</span><span style="color:#4ec9b0;">Car</span><span
+style="color:gainsboro;">&gt;</span>&nbsp;<span style="color:gainsboro;">cars</span>&nbsp;<span
+style="color:#b4b4b4;">=</span>&nbsp;<span style="color:#569cd6;">new</span>&nbsp;<span
+style="color:gainsboro;">(){</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">new</span>&nbsp;<span
+style="color:#4ec9b0;">Car</span>&nbsp;<span style="color:gainsboro;">{</span>&nbsp;<span
+style="color:gainsboro;">Id</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#b5cea8;">1</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Make</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#d69d85;">"Audi"</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Model</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#d69d85;">"R8"</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Year</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#b5cea8;">2018</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Doors</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#b5cea8;">2</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Color</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#d69d85;">"Red"</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Price</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#b5cea8;">79995</span>&nbsp;<span style="color:gainsboro;">},</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">new</span>&nbsp;<span
+style="color:#4ec9b0;">Car</span>&nbsp;<span style="color:gainsboro;">{</span>&nbsp;<span
+style="color:gainsboro;">Id</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#b5cea8;">2</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Make</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#d69d85;">"Aston&nbsp;Martin"</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Model</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#d69d85;">"Rapide"</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Year</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#b5cea8;">2014</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Doors</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#b5cea8;">2</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Color</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#d69d85;">"Black"</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Price</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#b5cea8;">54995</span>&nbsp;<span style="color:gainsboro;">},</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">new</span>&nbsp;<span
+style="color:#4ec9b0;">Car</span>&nbsp;<span style="color:gainsboro;">{</span>&nbsp;<span
+style="color:gainsboro;">Id</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#b5cea8;">3</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Make</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#d69d85;">"Porsche"</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Model</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#d69d85;">"&nbsp;911&nbsp;991"</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Year</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#b5cea8;">2020</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Doors</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#b5cea8;">2</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Color</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#d69d85;">"White"</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Price</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#b5cea8;">155000</span>&nbsp;<span style="color:gainsboro;">},</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">new</span>&nbsp;<span
+style="color:#4ec9b0;">Car</span>&nbsp;<span style="color:gainsboro;">{</span>&nbsp;<span
+style="color:gainsboro;">Id</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#b5cea8;">4</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Make</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#d69d85;">"Mercedes-Benz"</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Model</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#d69d85;">"GLE&nbsp;63S"</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Year</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#b5cea8;">2021</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Doors</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#b5cea8;">5</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Color</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#d69d85;">"Blue"</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Price</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#b5cea8;">83995</span>&nbsp;<span style="color:gainsboro;">},</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">new</span>&nbsp;<span
+style="color:#4ec9b0;">Car</span>&nbsp;<span style="color:gainsboro;">{</span>&nbsp;<span
+style="color:gainsboro;">Id</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#b5cea8;">5</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Make</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#d69d85;">"BMW"</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Model</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#d69d85;">"X6&nbsp;M"</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Year</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#b5cea8;">2020</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Doors</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#b5cea8;">5</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Color</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#d69d85;">"Silver"</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Price</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#b5cea8;">62995</span>&nbsp;<span style="color:gainsboro;">},</span>
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:gainsboro;">};</span>
+<span style="color:gainsboro;">}</span></pre>
+    <p>The service implements this interface:</p>
+    <pre style="padding:3px;font-family:Cascadia Mono;font-size:13px;color:#dadada;background:#1e1e1e;"><span
+style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">interface</span>&nbsp;<span
+style="color:#b8d7a3;">ICarService</span>
+<span style="color:gainsboro;">{</span>
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#4ec9b0">List</span><span style="color:gainsboro;">&lt;</span><span
+style="color:#4ec9b0;">Car</span><span style="color:gainsboro;">&gt;</span>&nbsp;<span
+style="color:#dcdcaa;">GetAll</span><span style="color:gainsboro;">();</span>
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#4ec9b0">Car</span>&nbsp;<span style="color:#dcdcaa;">Get</span><span
+style="color:gainsboro;">(</span><span style="color:#569cd6;">int</span>&nbsp;<span
+style="color:#9cdcfe;">id</span><span style="color:gainsboro;">);</span>
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">void</span>&nbsp;<span style="color:#dcdcaa;">Save</span><span
+style="color:gainsboro;">(</span><span style="color:#4ec9b0;">Car</span>&nbsp;<span
+style="color:#9cdcfe;">car</span><span style="color:gainsboro;">);</span>
+<span style="color:gainsboro;">}</span></pre>
+    <p>And it's registered as a singleton so that any state within the service
+      is maintained:</p>
+    <pre style="padding:3px;font-family:Cascadia Mono;font-size:13px;color:#dadada;background:#1e1e1e;"><span
+style="color:#9cdcfe;">builder</span><span style="color:#b4b4b4;">.</span><span
+style="color:gainsboro;">Services</span><span style="color:#b4b4b4;">.</span><span
+style="color:#dcdcaa;">AddSingleton</span><span style="color:gainsboro;">&lt;</span><span
+style="color:#b8d7a3;">ICarService</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:#4ec9b0;">CarService</span><span style="color:gainsboro;">&gt;();</span>
+</pre>
+    <p>Let's assume that I want to display a list of cars <br>
+    </p>
+    <p>.</p>
+  </body>
+</html>

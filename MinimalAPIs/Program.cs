@@ -28,7 +28,7 @@ app.MapRazorPages();
 
 app.MapGet("/api/cars",  (ICarService service) =>
 {
-    return Results.Json(service.GetAll());
+    return Results.Ok(service.GetAll());
 });
 
 app.MapGet("/api/car/{id:int}", (int id, ICarService service) =>
