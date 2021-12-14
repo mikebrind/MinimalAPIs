@@ -54,25 +54,25 @@
                 document.getElementById('Color').value = car.color; 
                 document.getElementById('Price').value = car.price; 
             });
-        }
+}
 
-        const saveCar = () => {
-            const model = {
-                id:  document.getElementById('Id').value,
-                model: document.getElementById('Model').value,
-                make: document.getElementById('Make').value,
-                year: document.getElementById('Year').value,
-                doors: document.getElementById('Doors').value,
-                color: document.getElementById('Color').value,
-                price: document.getElementById('Price').value,
-            };
-            fetch('/api/save',  {  
-                method: model.id > 0 ? 'put' : 'post',
-                headers: {
-                    "Content-type": "application/json",
-                },
-                body: JSON.stringify(model)
-            });
-        }
+            const saveCar = () => {
+                const model = {
+                    id:  document.getElementById('Id').value,
+                    model: document.getElementById('Model').value,
+                    make: document.getElementById('Make').value,
+                    year: document.getElementById('Year').value,
+                    doors: document.getElementById('Doors').value,
+                    color: document.getElementById('Color').value,
+                    price: document.getElementById('Price').value,
+                };
+                fetch('/api/save',  {  
+                    method: model.id > 0 ? 'put' : 'post',
+                    headers: {
+                        "Content-type": "application/json",
+                    },
+                    body: JSON.stringify(model)
+                });
+            }
     </script>
 }

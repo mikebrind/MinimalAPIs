@@ -3,364 +3,764 @@
   <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <title>Minimal APIs in Razor Pages</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.min.css">
+    <script type="9811b4d9064aec3781efbae1-text/javascript">!function(a,b,c,d){var e,f=document,g=f.getElementsByTagName("SCRIPT"),h=g[g.length-1].previousElementSibling,i=f.defaultView&&f.defaultView.getComputedStyle?f.defaultView.getComputedStyle(h):h.currentStyle;if(i&&i[a]!==b)for(e=0;e<c.length;e++)f.write('<link href="'+c[e]+'" '+d+"/>")}("position","absolute",["/lib/bootstrap/dist/css/bootstrap.min.css"], "rel=\u0022stylesheet\u0022 crossorigin=\u0022anonymous\u0022 integrity=\u0022sha256-eSi1q2PG6J7g7ib17yAaWMcrr5GrtohYChqibrV7PBE=\u0022 ");</script>
+    <link href="https://fonts.googleapis.com/css?family=Oswald:300,400%7CRoboto:400,700"
+      rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Fredericka+the+Great&amp;display=swap"
+      rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script defer="defer" src="https://use.fontawesome.com/releases/v5.0.9/js/all.js"
+integrity="sha384-8iPTk2s/jMVj81dnzb/iFR2sdA7u06vHJyyLlAd4snFpCl/SnyUjRrbdJsw1pGIl"
+crossorigin="anonymous" type="9811b4d9064aec3781efbae1-text/javascript"></script>
+    <link rel="stylesheet" href="https://www.mikesdotnetting.com/css/site.css">
   </head>
   <body>
-    <h1>Using Minimal APIs in ASP.NET Core Razor Pages</h1>
-    <p>If you are using ASP.NET Core Razor Pages to develop your web
-      application, you have already decided that the majority of your HTML will
-      be generated on the server. Nevertheless, chances are that you will want
-      to introduce some client side operations into the application to improve
-      its user friendliness in places. If those operations involve data, you
-      will probably want to work with JSON. From .NET 6, you can use a
-      simplified minimal request handler API that works with JSON by default.</p>
-    <p> Up until .NET 6, your options were pretty much restricted to using page
-      handler methods to accept and return JSON, or adding Web API controllers
-      to the application. Returning <a href="https://www.mikesdotnetting.com/article/318/working-with-json-in-razor-pages">JsonResults
-        from page handler methods</a> work, but there is something a little
-      hacky about this approach. Razor pages are intended for generating UI, not
-      providing data services over HTTP. Every time you call a page handler
-      method from script, the PageModel and all its dependencies are
-      instantiated whether they are needed or not. You can use Web API
-      controllers, of course, but they require some additional configuration to
-      get them to work. </p>
-    <p>Working with minimal API request handlers is designed to provide a low
-      complexity experience. You register request handlers with the <code>Map[HttpMethod]</code>
-      method on <code>WebApplication</code> - <code>MapPost</code>, <code>MapGet</code>,
-      <code>MapPut</code>, and so on, using the same convention that you
-      register page handler methods in a PageModel class. Recall that an
-      instance of the <code>WebApplication</code> type is returned from the <code>builder.Build</code>
-      method call in <i>Program.cs</i> (<a href="https://www.mikesdotnetting.com/article/357/razor-pages-startup-in-net-6https://www.mikesdotnetting.com/article/357/razor-pages-startup-in-net-6">discussed
-        in my previous article</a>). You pass in a route template and a route
-      handler - a standard .NET <code>Delegate</code> that executes when the
-      route matches. This can be a named function or a lambda expression that
-      can take parameters. The route handler can be configured to return one of
-      many built-in response types, including JSON, text, and files. The obvious
-      omission from the built-in return types is HTML.&nbsp; That’s what Razor
-      Pages is for. </p>
-    <p>I've got a simple service that contains some basic CRUD operations
-      against a list of cars:</p>
-    <pre style="font-family:Cascadia Mono;font-size:13px;color:#dadada;background:#1e1e1e;"><span
-
-style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">class</span>&nbsp;<span
-
-style="color:#4ec9b0;">CarService</span>&nbsp;<span style="color:gainsboro;">:</span>&nbsp;<span
-
+    <article style="width:810px;margin-left:100px;">
+      <h1>Using Minimal APIs in ASP.NET Core Razor Pages</h1>
+      <p>If you are using ASP.NET Core Razor Pages to develop your web
+        application, you have already decided that the majority of your HTML
+        will be generated on the server. Nevertheless, chances are that you will
+        want to introduce some client side operations into the application to
+        improve its user friendliness in places. If those operations involve
+        data, you will probably want to work with JSON. From .NET 6, you can use
+        a simplified minimal request handler API that works with JSON by
+        default.</p>
+      <p> Up until .NET 6, your options for working with JSON in Razor Pages
+        were pretty much restricted to using page handler methods to accept and
+        return JSON, or adding Web API controllers to the application. Returning
+        <a href="https://www.mikesdotnetting.com/article/318/working-with-json-in-razor-pages">JsonResults
+          from page handler methods</a> work, but there is something a little
+        hacky about this approach. Razor pages are intended for generating UI,
+        not providing data services over HTTP. Every time you call a page
+        handler method from script, the PageModel and all its dependencies are
+        instantiated whether they are needed or not. You can use Web API
+        controllers, of course, but they require some additional configuration
+        to get them to work. </p>
+      <p>Working with minimal API request handlers is designed to provide a low
+        complexity experience. You register request handlers with the <code>Map[HttpMethod]</code>
+        method on <code>WebApplication</code> - <code>MapPost</code>, <code>MapGet</code>,
+        <code>MapPut</code>, and so on, using a similar HTTP method based naming
+        convention to the one that you use to register page handler methods in a
+        PageModel class. Recall that an instance of the <code>WebApplication</code>
+        type is returned from the <code>builder.Build</code> method call in <i>Program.cs</i>
+        (<a href="https://www.mikesdotnetting.com/article/357/razor-pages-startup-in-net-6https://www.mikesdotnetting.com/article/357/razor-pages-startup-in-net-6">discussed
+          in my previous article</a>). You pass in a route template and a route
+        handler - a standard .NET <code>Delegate</code> that executes when the
+        route matches. This can be a named function or a lambda expression that
+        can take parameters. The route handler can be configured to return one
+        of many built-in response types, including JSON, text, and files. The
+        obvious omission from the built-in return types is HTML.&nbsp; That’s
+        what Razor Pages is for. </p>
+      <p>I'm going to explore this new feature by implementing a simple one-page
+        CRUD app that revolves around the same Car model and service that I have
+        used in previous posts. </p>
+      <p>I have a <code>Car</code> class defined in a folder called <i>Models</i>:</p>
+      <pre style="padding:5px;font-family:Cascadia Mono;font-size:13px;color:gainsboro;background:#1e1e1e;"><span
+style="color:#569cd6;">namespace</span>&nbsp;MinimalAPIs<span style="color:#b4b4b4;">.</span>Models;
+ 
+<span style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">class</span>&nbsp;<span
+style="color:#4ec9b0;">Car</span>
+{
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">int</span>&nbsp;Id&nbsp;{&nbsp;<span
+style="color:#569cd6;">get</span>;&nbsp;<span style="color:#569cd6;">set</span>;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">string</span>&nbsp;Make&nbsp;{&nbsp;<span
+style="color:#569cd6;">get</span>;&nbsp;<span style="color:#569cd6;">set</span>;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">string</span>&nbsp;Model&nbsp;{&nbsp;<span
+style="color:#569cd6;">get</span>;&nbsp;<span style="color:#569cd6;">set</span>;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">int</span>&nbsp;Year&nbsp;{&nbsp;<span
+style="color:#569cd6;">get</span>;&nbsp;<span style="color:#569cd6;">set</span>;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">int</span>&nbsp;Doors&nbsp;{&nbsp;<span
+style="color:#569cd6;">get</span>;&nbsp;<span style="color:#569cd6;">set</span>;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">string</span>&nbsp;Color&nbsp;{&nbsp;<span
+style="color:#569cd6;">get</span>;&nbsp;<span style="color:#569cd6;">set</span>;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">decimal</span>&nbsp;Price&nbsp;{&nbsp;<span
+style="color:#569cd6;">get</span>;&nbsp;<span style="color:#569cd6;">set</span>;&nbsp;}
+}</pre>
+      <p>I've got a simple service that contains some basic CRUD operations
+        against a list of cars:</p>
+      <pre style="font-family:padding:5px;Cascadia Mono;font-size:13px;color:#dadada;background:#1e1e1e;"><span
+style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">class</span>&nbsp;<span
+style="color:#4ec9b0;">CarService</span>&nbsp;<span style="color:gainsboro;">:</span>&nbsp;<span
 style="color:#dcdcaa;">ICarService</span>
 <span style="color:gainsboro;">{</span>
-&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">public</span>&nbsp;<span style="color:#4ec9b0;">List</span><span
-
-style="color:gainsboro;">&lt;</span><span style="color:#4ec9b0;">Car</span><span
-
-style="color:gainsboro;">&gt;</span>&nbsp;<span style="color:#dcdcaa;">GetAll</span><span
-
-style="color:gainsboro;">()</span>&nbsp;<span style="color:#b4b4b4;">=&gt;</span>&nbsp;<span
-
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">public</span>&nbsp;<span style="color:#4ec9b0;">List</span><span
+style="color:gainsboro;">&lt;</span><span style="color:#4ec9b0;">Car</span><span
+style="color:gainsboro;">&gt;</span>&nbsp;<span style="color:#dcdcaa;">GetAll</span><span
+style="color:gainsboro;">()</span>&nbsp;<span style="color:#b4b4b4;">=&gt;</span>&nbsp;<span
 style="color:gainsboro;">cars</span><span style="color:gainsboro;">;</span>
-&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">void</span>&nbsp;<span
-
-style="color:#dcdcaa;">Save</span><span style="color:gainsboro;">(</span><span style="color:#4ec9b0;">Car</span>&nbsp;<span
-
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">void</span>&nbsp;<span
+style="color:#dcdcaa;">Save</span><span style="color:gainsboro;">(</span><span style="color:#4ec9b0;">Car</span>&nbsp;<span
 style="color:#9cdcfe;">car</span><span style="color:gainsboro;">)</span>
 &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:gainsboro;">{</span>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#d8a0df;">if</span>&nbsp;<span
-
-style="color:gainsboro;">(</span><span style="color:gainsboro;">car</span><span
-
-style="color:#b4b4b4;">.</span><span style="color:gainsboro;">Id</span>&nbsp;<span
-
-style="color:#b4b4b4;">!=</span>&nbsp;<span style="color:#b5cea8;">0</span><span
-
-style="color:gainsboro;">)</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#d8a0df;">if</span>&nbsp;<span
+style="color:gainsboro;">(</span><span style="color:#9cdcfe;">car</span><span style="color:#b4b4b4;">.</span><span
+style="color:gainsboro;">Id</span>&nbsp;<span style="color:#b4b4b4;">!=</span>&nbsp;<span
+style="color:#b5cea8;">0</span><span style="color:gainsboro;">)</span>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:gainsboro;">{</span>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">var</span>&nbsp;<span
-
-style="color:#9cdcfe;">carToUpdate</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
-
-style="color:gainsboro;">cars</span><span style="color:#b4b4b4;">.</span><span style="color:#dcdcaa;">FirstOrDefault</span><span
-
-style="color:gainsboro;">(</span><span style="color:#9cdcfe;">c</span>&nbsp;<span
-
-style="color:#b4b4b4;">=&gt;</span>&nbsp;<span style="color:gainsboro;">c</span><span
-
-style="color:#b4b4b4;">.</span><span style="color:gainsboro;">Id</span>&nbsp;<span
-
-style="color:#b4b4b4;">==</span>&nbsp;<span style="color:gainsboro;">car</span><span
-
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">var</span>&nbsp;<span
+style="color:#9cdcfe;">carToUpdate</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:gainsboro;">cars</span><span style="color:#b4b4b4;">.</span><span style="color:#dcdcaa;">FirstOrDefault</span><span
+style="color:gainsboro;">(</span><span style="color:#9cdcfe;">c</span>&nbsp;<span
+style="color:#b4b4b4;">=&gt;</span>&nbsp;<span style="color:gainsboro;">c</span><span
+style="color:#b4b4b4;">.</span><span style="color:gainsboro;">Id</span>&nbsp;<span
+style="color:#b4b4b4;">==</span>&nbsp;<span style="color:#9cdcfe;">car</span><span
 style="color:#b4b4b4;">.</span><span style="color:gainsboro;">Id</span><span style="color:gainsboro;">);</span>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#d8a0df;">if</span>&nbsp;<span
-
-style="color:gainsboro;">(</span><span style="color:gainsboro;">carToUpdate</span>&nbsp;<span
-
-style="color:#b4b4b4;">!=</span>&nbsp;<span style="color:#569cd6;">null</span><span
-
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#d8a0df;">if</span>&nbsp;<span
+style="color:gainsboro;">(</span><span style="color:gainsboro;">carToUpdate</span>&nbsp;<span
+style="color:#b4b4b4;">!=</span>&nbsp;<span style="color:#569cd6;">null</span><span
 style="color:gainsboro;">)</span>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:gainsboro;">{</span>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
-
-style="color:gainsboro;">cars</span><span style="color:#b4b4b4;">.</span><span style="color:#dcdcaa;">Remove</span><span
-
-style="color:gainsboro;">(</span><span style="color:gainsboro;">carToUpdate</span><span
-
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+style="color:gainsboro;">cars</span><span style="color:#b4b4b4;">.</span><span style="color:#dcdcaa;">Remove</span><span
+style="color:gainsboro;">(</span><span style="color:gainsboro;">carToUpdate</span><span
 style="color:gainsboro;">);</span>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:gainsboro;">}</span>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:gainsboro;">}</span>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#d8a0df;">else</span>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:gainsboro;">{</span>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:gainsboro;">car</span><span
-
-style="color:#b4b4b4;">.</span><span style="color:gainsboro;">Id</span>&nbsp;<span
-
-style="color:#b4b4b4;">=</span>&nbsp;<span style="color:gainsboro;">cars</span><span
-
-style="color:#b4b4b4;">.</span><span style="color:#b8d7a3;">Max</span><span style="color:gainsboro;">(</span><span
-
-style="color:#9cdcfe;">c</span>&nbsp;<span style="color:#b4b4b4;">=&gt;</span>&nbsp;<span
-
-style="color:gainsboro;">c</span><span style="color:#b4b4b4;">.</span><span style="color:gainsboro;">Id</span><span
-
-style="color:gainsboro;">)</span>&nbsp;<span style="color:#b4b4b4;">+</span>&nbsp;<span
-
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:gainsboro;">car</span><span
+style="color:#b4b4b4;">.</span><span style="color:gainsboro;">Id</span>&nbsp;<span
+style="color:#b4b4b4;">=</span>&nbsp;<span style="color:gainsboro;">cars</span><span
+style="color:#b4b4b4;">.</span><span style="color:#b8d7a3;">Max</span><span style="color:gainsboro;">(</span><span
+style="color:#9cdcfe;">c</span>&nbsp;<span style="color:#b4b4b4;">=&gt;</span>&nbsp;<span
+style="color:gainsboro;">c</span><span style="color:#b4b4b4;">.</span><span style="color:gainsboro;">Id</span><span
+style="color:gainsboro;">)</span>&nbsp;<span style="color:#b4b4b4;">+</span>&nbsp;<span
 style="color:#b5cea8;">1</span><span style="color:gainsboro;">;</span>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:gainsboro;">}</span>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:gainsboro;">cars</span><span
-
-style="color:#b4b4b4;">.</span><span style="color:#dcdcaa;">Add</span><span style="color:gainsboro;">(</span><span
-
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:gainsboro;">cars</span><span
+style="color:#b4b4b4;">.</span><span style="color:#dcdcaa;">Add</span><span style="color:gainsboro;">(</span><span
 style="color:gainsboro;">car</span><span style="color:gainsboro;">);</span>
 &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:gainsboro;">}</span>&nbsp;
  
-&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">public</span>&nbsp;<span style="color:#4ec9b0;">Car</span>&nbsp;<span
-
-style="color:#dcdcaa;">Get</span><span style="color:gainsboro;">(</span><span style="color:#569cd6;">int</span>&nbsp;<span
-
-style="color:#9cdcfe;">id</span><span style="color:gainsboro;">)</span>&nbsp;<span
-
-style="color:#b4b4b4;">=&gt;</span>&nbsp;<span style="color:gainsboro;">cars</span><span
-
-style="color:#b4b4b4;">.</span><span style="color:#b8d7a3;">FirstOrDefault</span><span
-
-style="color:gainsboro;">(</span><span style="color:#9cdcfe;">c</span>&nbsp;<span
-
-style="color:#b4b4b4;">=&gt;</span>&nbsp;<span style="color:gainsboro;">c</span><span
-
-style="color:#b4b4b4;">.</span><span style="color:gainsboro;">Id</span>&nbsp;<span
-
-style="color:#b4b4b4;">==</span>&nbsp;<span style="color:gainsboro;">id</span><span
-
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">public</span>&nbsp;<span style="color:#4ec9b0;">Car</span>&nbsp;<span
+style="color:#dcdcaa;">Get</span><span style="color:gainsboro;">(</span><span style="color:#569cd6;">int</span>&nbsp;<span
+style="color:#9cdcfe;">id</span><span style="color:gainsboro;">)</span>&nbsp;<span
+style="color:#b4b4b4;">=&gt;</span>&nbsp;<span style="color:gainsboro;">cars</span><span
+style="color:#b4b4b4;">.</span><span style="color:#b8d7a3;">FirstOrDefault</span><span
+style="color:gainsboro;">(</span><span style="color:#9cdcfe;">c</span>&nbsp;<span
+style="color:#b4b4b4;">=&gt;</span>&nbsp;<span style="color:gainsboro;">c</span><span
+style="color:#b4b4b4;">.</span><span style="color:gainsboro;">Id</span>&nbsp;<span
+style="color:#b4b4b4;">==</span>&nbsp;<span style="color:gainsboro;">id</span><span
 style="color:gainsboro;">);</span>
  
  
-&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">private</span>&nbsp;<span style="color:#4ec9b0">List</span><span
-
-style="color:gainsboro;">&lt;</span><span style="color:#4ec9b0;">Car</span><span
-
-style="color:gainsboro;">&gt;</span>&nbsp;<span style="color:gainsboro;">cars</span>&nbsp;<span
-
-style="color:#b4b4b4;">=</span>&nbsp;<span style="color:#569cd6;">new</span>&nbsp;<span
-
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">private</span>&nbsp;<span style="color:#4ec9b0">List</span><span
+style="color:gainsboro;">&lt;</span><span style="color:#4ec9b0;">Car</span><span
+style="color:gainsboro;">&gt;</span>&nbsp;<span style="color:gainsboro;">cars</span>&nbsp;<span
+style="color:#b4b4b4;">=</span>&nbsp;<span style="color:#569cd6;">new</span>&nbsp;<span
 style="color:gainsboro;">(){</span>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">new</span>&nbsp;<span
-
-style="color:#4ec9b0;">Car</span>&nbsp;<span style="color:gainsboro;">{</span>&nbsp;<span
-
-style="color:gainsboro;">Id</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
-
-style="color:#b5cea8;">1</span><span style="color:gainsboro;">,</span>&nbsp;<span
-
-style="color:gainsboro;">Make</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
-
-style="color:#d69d85;">"Audi"</span><span style="color:gainsboro;">,</span>&nbsp;<span
-
-style="color:gainsboro;">Model</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
-
-style="color:#d69d85;">"R8"</span><span style="color:gainsboro;">,</span>&nbsp;<span
-
-style="color:gainsboro;">Year</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
-
-style="color:#b5cea8;">2018</span><span style="color:gainsboro;">,</span>&nbsp;<span
-
-style="color:gainsboro;">Doors</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
-
-style="color:#b5cea8;">2</span><span style="color:gainsboro;">,</span>&nbsp;<span
-
-style="color:gainsboro;">Color</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
-
-style="color:#d69d85;">"Red"</span><span style="color:gainsboro;">,</span>&nbsp;<span
-
-style="color:gainsboro;">Price</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
-
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">new</span>&nbsp;<span
+style="color:#4ec9b0;">Car</span>&nbsp;<span style="color:gainsboro;">{</span>&nbsp;<span
+style="color:gainsboro;">Id</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#b5cea8;">1</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Make</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#d69d85;">"Audi"</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Model</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#d69d85;">"R8"</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Year</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#b5cea8;">2018</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Doors</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#b5cea8;">2</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Color</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#d69d85;">"Red"</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Price</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
 style="color:#b5cea8;">79995</span>&nbsp;<span style="color:gainsboro;">},</span>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">new</span>&nbsp;<span
-
-style="color:#4ec9b0;">Car</span>&nbsp;<span style="color:gainsboro;">{</span>&nbsp;<span
-
-style="color:gainsboro;">Id</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
-
-style="color:#b5cea8;">2</span><span style="color:gainsboro;">,</span>&nbsp;<span
-
-style="color:gainsboro;">Make</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
-
-style="color:#d69d85;">"Aston&nbsp;Martin"</span><span style="color:gainsboro;">,</span>&nbsp;<span
-
-style="color:gainsboro;">Model</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
-
-style="color:#d69d85;">"Rapide"</span><span style="color:gainsboro;">,</span>&nbsp;<span
-
-style="color:gainsboro;">Year</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
-
-style="color:#b5cea8;">2014</span><span style="color:gainsboro;">,</span>&nbsp;<span
-
-style="color:gainsboro;">Doors</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
-
-style="color:#b5cea8;">2</span><span style="color:gainsboro;">,</span>&nbsp;<span
-
-style="color:gainsboro;">Color</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
-
-style="color:#d69d85;">"Black"</span><span style="color:gainsboro;">,</span>&nbsp;<span
-
-style="color:gainsboro;">Price</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
-
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">new</span>&nbsp;<span
+style="color:#4ec9b0;">Car</span>&nbsp;<span style="color:gainsboro;">{</span>&nbsp;<span
+style="color:gainsboro;">Id</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#b5cea8;">2</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Make</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#d69d85;">"Aston&nbsp;Martin"</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Model</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#d69d85;">"Rapide"</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Year</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#b5cea8;">2014</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Doors</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#b5cea8;">2</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Color</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#d69d85;">"Black"</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Price</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
 style="color:#b5cea8;">54995</span>&nbsp;<span style="color:gainsboro;">},</span>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">new</span>&nbsp;<span
-
-style="color:#4ec9b0;">Car</span>&nbsp;<span style="color:gainsboro;">{</span>&nbsp;<span
-
-style="color:gainsboro;">Id</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
-
-style="color:#b5cea8;">3</span><span style="color:gainsboro;">,</span>&nbsp;<span
-
-style="color:gainsboro;">Make</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
-
-style="color:#d69d85;">"Porsche"</span><span style="color:gainsboro;">,</span>&nbsp;<span
-
-style="color:gainsboro;">Model</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
-
-style="color:#d69d85;">"&nbsp;911&nbsp;991"</span><span style="color:gainsboro;">,</span>&nbsp;<span
-
-style="color:gainsboro;">Year</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
-
-style="color:#b5cea8;">2020</span><span style="color:gainsboro;">,</span>&nbsp;<span
-
-style="color:gainsboro;">Doors</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
-
-style="color:#b5cea8;">2</span><span style="color:gainsboro;">,</span>&nbsp;<span
-
-style="color:gainsboro;">Color</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
-
-style="color:#d69d85;">"White"</span><span style="color:gainsboro;">,</span>&nbsp;<span
-
-style="color:gainsboro;">Price</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
-
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">new</span>&nbsp;<span
+style="color:#4ec9b0;">Car</span>&nbsp;<span style="color:gainsboro;">{</span>&nbsp;<span
+style="color:gainsboro;">Id</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#b5cea8;">3</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Make</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#d69d85;">"Porsche"</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Model</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#d69d85;">"&nbsp;911&nbsp;991"</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Year</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#b5cea8;">2020</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Doors</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#b5cea8;">2</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Color</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#d69d85;">"White"</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Price</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
 style="color:#b5cea8;">155000</span>&nbsp;<span style="color:gainsboro;">},</span>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">new</span>&nbsp;<span
-
-style="color:#4ec9b0;">Car</span>&nbsp;<span style="color:gainsboro;">{</span>&nbsp;<span
-
-style="color:gainsboro;">Id</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
-
-style="color:#b5cea8;">4</span><span style="color:gainsboro;">,</span>&nbsp;<span
-
-style="color:gainsboro;">Make</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
-
-style="color:#d69d85;">"Mercedes-Benz"</span><span style="color:gainsboro;">,</span>&nbsp;<span
-
-style="color:gainsboro;">Model</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
-
-style="color:#d69d85;">"GLE&nbsp;63S"</span><span style="color:gainsboro;">,</span>&nbsp;<span
-
-style="color:gainsboro;">Year</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
-
-style="color:#b5cea8;">2021</span><span style="color:gainsboro;">,</span>&nbsp;<span
-
-style="color:gainsboro;">Doors</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
-
-style="color:#b5cea8;">5</span><span style="color:gainsboro;">,</span>&nbsp;<span
-
-style="color:gainsboro;">Color</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
-
-style="color:#d69d85;">"Blue"</span><span style="color:gainsboro;">,</span>&nbsp;<span
-
-style="color:gainsboro;">Price</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
-
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">new</span>&nbsp;<span
+style="color:#4ec9b0;">Car</span>&nbsp;<span style="color:gainsboro;">{</span>&nbsp;<span
+style="color:gainsboro;">Id</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#b5cea8;">4</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Make</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#d69d85;">"Mercedes-Benz"</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Model</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#d69d85;">"GLE&nbsp;63S"</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Year</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#b5cea8;">2021</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Doors</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#b5cea8;">5</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Color</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#d69d85;">"Blue"</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Price</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
 style="color:#b5cea8;">83995</span>&nbsp;<span style="color:gainsboro;">},</span>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">new</span>&nbsp;<span
-
-style="color:#4ec9b0;">Car</span>&nbsp;<span style="color:gainsboro;">{</span>&nbsp;<span
-
-style="color:gainsboro;">Id</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
-
-style="color:#b5cea8;">5</span><span style="color:gainsboro;">,</span>&nbsp;<span
-
-style="color:gainsboro;">Make</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
-
-style="color:#d69d85;">"BMW"</span><span style="color:gainsboro;">,</span>&nbsp;<span
-
-style="color:gainsboro;">Model</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
-
-style="color:#d69d85;">"X6&nbsp;M"</span><span style="color:gainsboro;">,</span>&nbsp;<span
-
-style="color:gainsboro;">Year</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
-
-style="color:#b5cea8;">2020</span><span style="color:gainsboro;">,</span>&nbsp;<span
-
-style="color:gainsboro;">Doors</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
-
-style="color:#b5cea8;">5</span><span style="color:gainsboro;">,</span>&nbsp;<span
-
-style="color:gainsboro;">Color</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
-
-style="color:#d69d85;">"Silver"</span><span style="color:gainsboro;">,</span>&nbsp;<span
-
-style="color:gainsboro;">Price</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
-
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">new</span>&nbsp;<span
+style="color:#4ec9b0;">Car</span>&nbsp;<span style="color:gainsboro;">{</span>&nbsp;<span
+style="color:gainsboro;">Id</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#b5cea8;">5</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Make</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#d69d85;">"BMW"</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Model</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#d69d85;">"X6&nbsp;M"</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Year</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#b5cea8;">2020</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Doors</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#b5cea8;">5</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Color</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
+style="color:#d69d85;">"Silver"</span><span style="color:gainsboro;">,</span>&nbsp;<span
+style="color:gainsboro;">Price</span>&nbsp;<span style="color:#b4b4b4;">=</span>&nbsp;<span
 style="color:#b5cea8;">62995</span>&nbsp;<span style="color:gainsboro;">},</span>
 &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:gainsboro;">};</span>
 <span style="color:gainsboro;">}</span></pre>
-    <p>The service implements this interface:</p>
-    <pre style="padding:3px;font-family:Cascadia Mono;font-size:13px;color:#dadada;background:#1e1e1e;"><span
-
-style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">interface</span>&nbsp;<span
-
+      <p>The service implements this interface:</p>
+      <pre style="padding:5px;font-family:Cascadia Mono;font-size:13px;color:#dadada;background:#1e1e1e;"><span
+style="color:#569cd6;">public</span>&nbsp;<span style="color:#569cd6;">interface</span>&nbsp;<span
 style="color:#b8d7a3;">ICarService</span>
 <span style="color:gainsboro;">{</span>
-&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#4ec9b0">List</span><span style="color:gainsboro;">&lt;</span><span
-
-style="color:#4ec9b0;">Car</span><span style="color:gainsboro;">&gt;</span>&nbsp;<span
-
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#4ec9b0">List</span><span style="color:gainsboro;">&lt;</span><span
+style="color:#4ec9b0;">Car</span><span style="color:gainsboro;">&gt;</span>&nbsp;<span
 style="color:#dcdcaa;">GetAll</span><span style="color:gainsboro;">();</span>
-&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#4ec9b0">Car</span>&nbsp;<span style="color:#dcdcaa;">Get</span><span
-
-style="color:gainsboro;">(</span><span style="color:#569cd6;">int</span>&nbsp;<span
-
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#4ec9b0">Car</span>&nbsp;<span style="color:#dcdcaa;">Get</span><span
+style="color:gainsboro;">(</span><span style="color:#569cd6;">int</span>&nbsp;<span
 style="color:#9cdcfe;">id</span><span style="color:gainsboro;">);</span>
-&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">void</span>&nbsp;<span style="color:#dcdcaa;">Save</span><span
-
-style="color:gainsboro;">(</span><span style="color:#4ec9b0;">Car</span>&nbsp;<span
-
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">void</span>&nbsp;<span style="color:#dcdcaa;">Save</span><span
+style="color:gainsboro;">(</span><span style="color:#4ec9b0;">Car</span>&nbsp;<span
 style="color:#9cdcfe;">car</span><span style="color:gainsboro;">);</span>
 <span style="color:gainsboro;">}</span></pre>
-    <p>And it's registered as a singleton so that any state within the service
-      is maintained:</p>
-    <pre style="padding:3px;font-family:Cascadia Mono;font-size:13px;color:#dadada;background:#1e1e1e;"><span
-
-style="color:#9cdcfe;">builder</span><span style="color:#b4b4b4;">.</span><span
-
-style="color:gainsboro;">Services</span><span style="color:#b4b4b4;">.</span><span
-
-style="color:#dcdcaa;">AddSingleton</span><span style="color:gainsboro;">&lt;</span><span
-
-style="color:#b8d7a3;">ICarService</span><span style="color:gainsboro;">,</span>&nbsp;<span
-
+      <p>And it's registered as a singleton so that any state within the service
+        is maintained:</p>
+      <pre style="padding:5px;font-family:Cascadia Mono;font-size:13px;color:#dadada;background:#1e1e1e;"><span
+style="color:#9cdcfe;">builder</span><span style="color:#b4b4b4;">.</span><span
+style="color:gainsboro;">Services</span><span style="color:#b4b4b4;">.</span><span
+style="color:#dcdcaa;">AddSingleton</span><span style="color:gainsboro;">&lt;</span><span
+style="color:#b8d7a3;">ICarService</span><span style="color:gainsboro;">,</span>&nbsp;<span
 style="color:#4ec9b0;">CarService</span><span style="color:gainsboro;">&gt;();</span>
 </pre>
-    <p>The following declaration registers a request handler that takes a route
-      template, optionally some parameters and returns a result:</p>
-    <pre style="padding:3px;font-family:Cascadia Mono;font-size:13px;color:#dadada;background:#1e1e1e;"><span style="color:gainsboro;">app</span><span style="color:#b4b4b4;">.</span><span style="color:gainsboro;">MapGet</span><span style="color:gainsboro;">(</span><span style="color:#d69d85;">&quot;/api/cars&quot;</span><span style="color:gainsboro;">,</span>&nbsp;&nbsp;<span style="color:gainsboro;">(</span><span style="color:gainsboro;">ICarService</span>&nbsp;<span style="color:#9cdcfe;">service</span><span style="color:gainsboro;">)</span>&nbsp;<span style="color:#b4b4b4;">=&gt;</span>
+      <p>The following declaration registers a request handler that responds to
+        <code> GET </code>requests. It takes a route template, optionally some
+        parameters and returns a result. The request handler is declared in <i>Program.cs</i>,
+        just before the <code>app.Run</code> method call. If you are using the
+        older Startup approach to configuration, the registration will go in the
+        <code>Configure</code> method after the call to <code>UseEndpoints</code>:</p>
+      <pre style="padding:3px;font-family:Cascadia Mono;font-size:13px;color:#dadada;background:#1e1e1e;"><span
+style="color:gainsboro;">app</span><span style="color:#b4b4b4;">.</span><span style="color:#dcdcaa;">MapGet</span><span
+style="color:gainsboro;">(</span><span style="color:#d69d85;">"/api/cars"</span><span
+style="color:gainsboro;">,</span>&nbsp;&nbsp;<span style="color:gainsboro;">(</span><span
+style="color:#b8d7a3;">ICarService</span>&nbsp;<span style="color:#9cdcfe;">service</span><span
+style="color:gainsboro;">)</span>&nbsp;<span style="color:#b4b4b4;">=&gt;</span>
 <span style="color:gainsboro;">{</span>
-&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#d8a0df;">return</span>&nbsp;<span style="color:gainsboro;">Results</span><span style="color:#b4b4b4;">.</span><span style="color:gainsboro;">Json</span><span style="color:gainsboro;">(</span><span style="color:gainsboro;">service</span><span style="color:#b4b4b4;">.</span><span style="color:gainsboro;">GetAll</span><span style="color:gainsboro;">());</span>
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#d8a0df;">return</span>&nbsp;<span style="color:gainsboro;">Results</span><span
+style="color:#b4b4b4;">.</span><span style="color:#dcdcaa;">Ok</span><span style="color:gainsboro;">(</span><span
+style="color:gainsboro;">service</span><span style="color:#b4b4b4;">.</span><span
+style="color:#dcdcaa;">GetAll</span><span style="color:gainsboro;">());</span>
 <span style="color:gainsboro;">});</span></pre>
-    <p> <br>
-    </p>
-    <p>.</p>
+      <p> The parameter in this example is the <code>ICarService</code>, which
+        is resolved from the DI container. Parameters are bound from a number of
+        other sources:</p>
+      <ul>
+        <li>route values</li>
+        <li>query string </li>
+        <li>request headers</li>
+        <li>body</li>
+      </ul>
+      <p>We can explicitly specify the parameter binding source using one of the
+        <code>From*</code> attributes: <code>FromRoute</code>, <code>FromBody</code>,
+        <code>FromHeader</code>, <code>FromQuery</code> or <code>FromServices</code>.
+        The <code>Results.Ok</code> method returns the value passed in to it
+        serialised to JSON with a 200 status code. So we have an API that will
+        repsonde to GET requests at <code>/api/cars</code>, and will return a
+        collection of cars serialised to JSON. Let's add a page to call this
+        endpoint and display the data. Here's some simple markup for a button
+        and an unordered list:</p>
+      <pre style="padding:5px;font-family:Cascadia Mono;font-size:13px;color:gainsboro;background:#1e1e1e;"><span
+style="color:gray;">&lt;</span><span style="color:#569cd6;">button</span>&nbsp;<span
+style="color:#9cdcfe;">class</span><span style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span><span
+style="color:#c8c8c8;">btn</span><span style="color:#c8c8c8;">&nbsp;btn-primary</span><span
+style="color:#c8c8c8;">"</span>&nbsp;<span style="color:#9cdcfe;">id</span><span
+style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span><span style="color:#c8c8c8;">get-cars</span><span
+style="color:#c8c8c8;">"</span><span style="color:gray;">&gt;</span>Get&nbsp;Cars<span
+style="color:gray;">&lt;</span><span style="color:gray;">/</span><span style="color:#569cd6;">button</span><span
+style="color:gray;">&gt;</span>&nbsp;
+
+<span style="color:gray;">&lt;</span><span style="color:#569cd6;">ul</span>&nbsp;<span
+style="color:#9cdcfe;">class</span><span style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span><span
+style="color:#c8c8c8;">results</span><span style="color:#c8c8c8;">&nbsp;mt-3</span><span
+style="color:#c8c8c8;">"</span><span style="color:gray;">&gt;</span><span style="color:gray;">&lt;</span><span
+style="color:gray;">/</span><span style="color:#569cd6;">ul</span><span style="color:gray;">&gt;</span></pre>
+      <p>Next, we need some script that wires up a click event handler to the
+        button, fetches the data from the API and populates the unordered list:</p>
+      <pre style="padding:5px;font-family:Cascadia Mono;font-size:13px;color:gainsboro;background:#1e1e1e;"><span
+style="color:#a699e6;">@</span><span style="color:#a699e6;">section</span>&nbsp;<span
+style="color:#9cdcfe;">scripts</span><span style="color:#a699e6;">{</span>
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:gray;">&lt;</span><span style="color:#569cd6;">script</span><span
+style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">const</span>&nbsp;list&nbsp;=&nbsp;document.querySelector(<span
+style="color:#d69d85;">'ul.results'</span>);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">const</span>&nbsp;getAll&nbsp;=&nbsp;document.getElementById(<span
+style="color:#d69d85;">'get-cars'</span>);
+ 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; getAll.addEventListener(<span style="color:#d69d85;">'click'</span>,&nbsp;()&nbsp;<span
+style="color:#569cd6;">=&gt;</span>&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;showCars();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;});
+ 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span style="color:#569cd6;">const</span>&nbsp;showCars&nbsp;=&nbsp;()&nbsp;<span
+style="color:#569cd6;">=&gt;</span>&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;list.innerHTML&nbsp;=&nbsp;<span
+style="color:#d69d85;">''</span>;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fetch(<span
+style="color:#d69d85;">"/api/cars"</span>)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.then(response&nbsp;<span
+style="color:#569cd6;">=&gt;</span>&nbsp;response.json())
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.then(cars&nbsp;<span
+style="color:#569cd6;">=&gt;</span>&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+style="color:#d8a0df;">for</span>(<span style="color:#569cd6;">let</span>&nbsp;i&nbsp;=&nbsp;0;i&nbsp;&lt;&nbsp;cars.length;i++){
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+style="color:#569cd6;">let</span>&nbsp;item&nbsp;=&nbsp;document.createElement(<span
+style="color:#d69d85;">'li'</span>);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;item.innerText&nbsp;=&nbsp;&nbsp;<span
+style="color:#d69d85;">`</span><span style="color:#d69d85;">${</span>cars<span style="color:#d69d85;">[</span>i<span
+style="color:#d69d85;">].</span>id<span style="color:#d69d85;">}</span><span style="color:#d69d85;">&nbsp;</span><span
+style="color:#d69d85;">${</span>cars<span style="color:#d69d85;">[</span>i<span
+style="color:#d69d85;">].</span>make<span style="color:#d69d85;">}</span><span style="color:#d69d85;">&nbsp;</span><span
+style="color:#d69d85;">${</span>cars<span style="color:#d69d85;">[</span>i<span
+style="color:#d69d85;">].</span>model<span style="color:#d69d85;">}</span><span
+style="color:#d69d85;">,&nbsp;</span><span style="color:#d69d85;">${</span>cars<span
+style="color:#d69d85;">[</span>i<span style="color:#d69d85;">].</span>year<span
+style="color:#d69d85;">}</span><span style="color:#d69d85;">&nbsp;£</span><span
+style="color:#d69d85;">${</span>cars<span style="color:#d69d85;">[</span>i<span
+style="color:#d69d85;">].</span>price<span style="color:#d69d85;">}</span><span
+style="color:#d69d85;">`</span>;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;item.classList.add(<span
+style="color:#d69d85;">'edit-car'</span>);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;item.dataset.id&nbsp;=&nbsp;cars[i].id;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;item.dataset.bsToggle&nbsp;=&nbsp;<span
+style="color:#d69d85;">'modal'</span>;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;item.dataset.bsTarget&nbsp;=&nbsp;<span
+style="color:#d69d85;">'#car-modal'</span>;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;item.addEventListener(<span
+style="color:#d69d85;">'click'</span>,&nbsp;(event)&nbsp;<span style="color:#569cd6;">=&gt;</span>{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; getCar(event.target.dataset.id);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;});
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;list.appendChild(item);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;});
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp; <span style="color:gray;">&lt;</span><span style="color:gray;">/</span><span
+style="color:#569cd6;">script</span><span style="color:gray;">&gt;</span>
+<span style="color:#a699e6;">}</span></pre>
+      <p>This code uses the Fetch API to make a call to the API, and then
+        iterates the returned data, assigning each car to a list item. While
+        doing so, it adds some attributes to the list item that will be used to
+        invoke a Bootstrap modal for editing the car later. It also adds a click
+        event handler to each item that will call a method called <code>getCar</code>,
+        which is yet to be defined. However, if you run the page and click the
+        button, the list of cars appears:</p>
+      <p><img src="https://www.mikesdotnetting.com/images/2021-12-14_07-33-19.png"
+          alt="Minimal API, Razor Pages"><br>
+      </p>
+      <p>Next, we add a partial page to the <i>Pages/Shared</i> folder named <i>_CarModal.cshtml</i>.
+        This will contain a form in a Bootstrap modal that we will use to add
+        new cars and edit existing ones. The complete markup for the file is as
+        follows:</p>
+      <pre style="padding:5px;font-family:Cascadia Mono;font-size:13px;color:gainsboro;background:#1e1e1e;"><span
+style="color:#a699e6;">@</span><span style="color:#a699e6;">model</span>&nbsp;<span
+style="color:#4ec9b0;">Car</span>
+<span style="color:gray;">&lt;</span><span style="color:#569cd6;">div</span>&nbsp;<span
+style="color:#9cdcfe;">class</span><span style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span><span
+style="color:#c8c8c8;">modal</span><span style="color:#c8c8c8;">&nbsp;fade</span><span
+style="color:#c8c8c8;">"</span>&nbsp;<span style="color:#9cdcfe;">tabindex</span><span
+style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span><span style="color:#c8c8c8;">-1</span><span
+style="color:#c8c8c8;">"</span>&nbsp;<span style="color:#9cdcfe;">role</span><span
+style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span><span style="color:#c8c8c8;">dialog</span><span
+style="color:#c8c8c8;">"</span>&nbsp;<span style="color:#9cdcfe;">id</span><span
+style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span><span style="color:#c8c8c8;">car-modal</span><span
+style="color:#c8c8c8;">"</span><span style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:gray;">&lt;</span><span style="color:#569cd6;">div</span>&nbsp;<span
+style="color:#9cdcfe;">class</span><span style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span><span
+style="color:#c8c8c8;">modal-dialog</span><span style="color:#c8c8c8;">"</span>&nbsp;<span
+style="color:#9cdcfe;">role</span><span style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span><span
+style="color:#c8c8c8;">document</span><span style="color:#c8c8c8;">"</span><span
+style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:gray;">&lt;</span><span
+style="color:#569cd6;">div</span>&nbsp;<span style="color:#9cdcfe;">class</span><span
+style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span><span style="color:#c8c8c8;">modal-content</span><span
+style="color:#c8c8c8;">"</span><span style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:gray;">&lt;</span><span
+style="color:#569cd6;">div</span>&nbsp;<span style="color:#9cdcfe;">class</span><span
+style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span><span style="color:#c8c8c8;">modal-header</span><span
+style="color:#c8c8c8;">"</span><span style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+style="color:gray;">&lt;</span><span style="color:#569cd6;">h5</span>&nbsp;<span
+style="color:#9cdcfe;">class</span><span style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span><span
+style="color:#c8c8c8;">modal-title</span><span style="color:#c8c8c8;">"</span><span
+style="color:gray;">&gt;</span>Save&nbsp;Car<span style="color:gray;">&lt;</span><span
+style="color:gray;">/</span><span style="color:#569cd6;">h5</span><span style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+style="color:gray;">&lt;</span><span style="color:#569cd6;">button</span>&nbsp;<span
+style="color:#9cdcfe;">type</span><span style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span><span
+style="color:#c8c8c8;">button</span><span style="color:#c8c8c8;">"</span>&nbsp;<span
+style="color:#9cdcfe;">class</span><span style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span><span
+style="color:#c8c8c8;">btn-close</span><span style="color:#c8c8c8;">"</span>&nbsp;<span
+style="color:#9cdcfe;">data-bs-dismiss</span><span style="color:#b4b4b4;">=</span><span
+style="color:#c8c8c8;">"</span>modal<span style="color:#c8c8c8;">"</span><span style="color:gray;">&gt;</span><span
+style="color:gray;">&lt;</span><span style="color:gray;">/</span><span style="color:#569cd6;">button</span><span
+style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:gray;">&lt;</span><span
+style="color:gray;">/</span><span style="color:#569cd6;">div</span><span style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:gray;">&lt;</span><span
+style="color:#569cd6;">div</span>&nbsp;<span style="color:#9cdcfe;">class</span><span
+style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span><span style="color:#c8c8c8;">modal-body</span><span
+style="color:#c8c8c8;">"</span><span style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+style="color:gray;">&lt;</span><span style="font-weight:bold;color:#009696;">input</span>&nbsp;<span
+style="font-weight:bold;color:#009696;">asp-for</span><span style="color:#b4b4b4;">=</span><span
+style="color:#c8c8c8;">"</span>Id<span style="color:#c8c8c8;">"</span>&nbsp;<span
+style="font-weight:bold;color:#009696;">type</span><span style="color:#b4b4b4;">=</span><span
+style="color:#c8c8c8;">"</span><span style="color:#c8c8c8;">hidden</span><span style="color:#c8c8c8;">"</span><span
+style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+style="color:gray;">&lt;</span><span style="color:#569cd6;">div</span>&nbsp;<span
+style="color:#9cdcfe;">class</span><span style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span><span
+style="color:#c8c8c8;">form-group</span><span style="color:#c8c8c8;">"</span><span
+style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+style="color:gray;">&lt;</span><span style="font-weight:bold;color:#009696;">label</span>&nbsp;<span
+style="font-weight:bold;color:#009696;">asp-for</span><span style="color:#b4b4b4;">=</span><span
+style="color:#c8c8c8;">"</span>Make<span style="color:#c8c8c8;">"</span><span style="color:gray;">&gt;</span><span
+style="color:gray;">&lt;</span><span style="color:gray;">/</span><span style="font-weight:bold;color:#009696;">label</span><span
+style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+style="color:gray;">&lt;</span><span style="font-weight:bold;color:#009696;">input</span>&nbsp;<span
+style="font-weight:bold;color:#009696;">asp-for</span><span style="color:#b4b4b4;">=</span><span
+style="color:#c8c8c8;">"</span>Make<span style="color:#c8c8c8;">"</span>&nbsp;<span
+style="color:#9cdcfe;">class</span><span style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span><span
+style="color:#c8c8c8;">form-control</span><span style="color:#c8c8c8;">"</span><span
+style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+style="color:gray;">&lt;</span><span style="color:gray;">/</span><span style="color:#569cd6;">div</span><span
+style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+style="color:gray;">&lt;</span><span style="color:#569cd6;">div</span>&nbsp;<span
+style="color:#9cdcfe;">class</span><span style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span><span
+style="color:#c8c8c8;">form-group</span><span style="color:#c8c8c8;">"</span><span
+style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+style="color:gray;">&lt;</span><span style="font-weight:bold;color:#009696;">label</span>&nbsp;<span
+style="font-weight:bold;color:#009696;">asp-for</span><span style="color:#b4b4b4;">=</span><span
+style="color:#c8c8c8;">"</span>Model<span style="color:#c8c8c8;">"</span><span style="color:gray;">&gt;</span><span
+style="color:gray;">&lt;</span><span style="color:gray;">/</span><span style="font-weight:bold;color:#009696;">label</span><span
+style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+style="color:gray;">&lt;</span><span style="font-weight:bold;color:#009696;">input</span>&nbsp;<span
+style="font-weight:bold;color:#009696;">asp-for</span><span style="color:#b4b4b4;">=</span><span
+style="color:#c8c8c8;">"</span>Model<span style="color:#c8c8c8;">"</span>&nbsp;<span
+style="color:#9cdcfe;">class</span><span style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span><span
+style="color:#c8c8c8;">form-control</span><span style="color:#c8c8c8;">"</span><span
+style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+style="color:gray;">&lt;</span><span style="color:gray;">/</span><span style="color:#569cd6;">div</span><span
+style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+style="color:gray;">&lt;</span><span style="color:#569cd6;">div</span>&nbsp;<span
+style="color:#9cdcfe;">class</span><span style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span><span
+style="color:#c8c8c8;">form-group</span><span style="color:#c8c8c8;">"</span><span
+style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+style="color:gray;">&lt;</span><span style="font-weight:bold;color:#009696;">label</span>&nbsp;<span
+style="font-weight:bold;color:#009696;">asp-for</span><span style="color:#b4b4b4;">=</span><span
+style="color:#c8c8c8;">"</span>Year<span style="color:#c8c8c8;">"</span><span style="color:gray;">&gt;</span><span
+style="color:gray;">&lt;</span><span style="color:gray;">/</span><span style="font-weight:bold;color:#009696;">label</span><span
+style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+style="color:gray;">&lt;</span><span style="font-weight:bold;color:#009696;">input</span>&nbsp;<span
+style="font-weight:bold;color:#009696;">asp-for</span><span style="color:#b4b4b4;">=</span><span
+style="color:#c8c8c8;">"</span>Year<span style="color:#c8c8c8;">"</span>&nbsp;<span
+style="color:#9cdcfe;">class</span><span style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span><span
+style="color:#c8c8c8;">form-control</span><span style="color:#c8c8c8;">"</span><span
+style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+style="color:gray;">&lt;</span><span style="color:gray;">/</span><span style="color:#569cd6;">div</span><span
+style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+style="color:gray;">&lt;</span><span style="color:#569cd6;">div</span>&nbsp;<span
+style="color:#9cdcfe;">class</span><span style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span><span
+style="color:#c8c8c8;">form-group</span><span style="color:#c8c8c8;">"</span><span
+style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+style="color:gray;">&lt;</span><span style="font-weight:bold;color:#009696;">label</span>&nbsp;<span
+style="font-weight:bold;color:#009696;">asp-for</span><span style="color:#b4b4b4;">=</span><span
+style="color:#c8c8c8;">"</span>Doors<span style="color:#c8c8c8;">"</span><span style="color:gray;">&gt;</span><span
+style="color:gray;">&lt;</span><span style="color:gray;">/</span><span style="font-weight:bold;color:#009696;">label</span><span
+style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+style="color:gray;">&lt;</span><span style="font-weight:bold;color:#009696;">input</span>&nbsp;<span
+style="font-weight:bold;color:#009696;">asp-for</span><span style="color:#b4b4b4;">=</span><span
+style="color:#c8c8c8;">"</span>Doors<span style="color:#c8c8c8;">"</span>&nbsp;<span
+style="color:#9cdcfe;">class</span><span style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span><span
+style="color:#c8c8c8;">form-control</span><span style="color:#c8c8c8;">"</span><span
+style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+style="color:gray;">&lt;</span><span style="color:gray;">/</span><span style="color:#569cd6;">div</span><span
+style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+style="color:gray;">&lt;</span><span style="color:#569cd6;">div</span>&nbsp;<span
+style="color:#9cdcfe;">class</span><span style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span><span
+style="color:#c8c8c8;">form-group</span><span style="color:#c8c8c8;">"</span><span
+style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+style="color:gray;">&lt;</span><span style="font-weight:bold;color:#009696;">label</span>&nbsp;<span
+style="font-weight:bold;color:#009696;">asp-for</span><span style="color:#b4b4b4;">=</span><span
+style="color:#c8c8c8;">"</span>Color<span style="color:#c8c8c8;">"</span><span style="color:gray;">&gt;</span><span
+style="color:gray;">&lt;</span><span style="color:gray;">/</span><span style="font-weight:bold;color:#009696;">label</span><span
+style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+style="color:gray;">&lt;</span><span style="font-weight:bold;color:#009696;">input</span>&nbsp;<span
+style="font-weight:bold;color:#009696;">asp-for</span><span style="color:#b4b4b4;">=</span><span
+style="color:#c8c8c8;">"</span>Color<span style="color:#c8c8c8;">"</span>&nbsp;<span
+style="color:#9cdcfe;">class</span><span style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span><span
+style="color:#c8c8c8;">form-control</span><span style="color:#c8c8c8;">"</span><span
+style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+style="color:gray;">&lt;</span><span style="color:gray;">/</span><span style="color:#569cd6;">div</span><span
+style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+style="color:gray;">&lt;</span><span style="color:#569cd6;">div</span>&nbsp;<span
+style="color:#9cdcfe;">class</span><span style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span><span
+style="color:#c8c8c8;">form-group</span><span style="color:#c8c8c8;">"</span><span
+style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+style="color:gray;">&lt;</span><span style="font-weight:bold;color:#009696;">label</span>&nbsp;<span
+style="font-weight:bold;color:#009696;">asp-for</span><span style="color:#b4b4b4;">=</span><span
+style="color:#c8c8c8;">"</span>Price<span style="color:#c8c8c8;">"</span><span style="color:gray;">&gt;</span><span
+style="color:gray;">&lt;</span><span style="color:gray;">/</span><span style="font-weight:bold;color:#009696;">label</span><span
+style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+style="color:gray;">&lt;</span><span style="font-weight:bold;color:#009696;">input</span>&nbsp;<span
+style="font-weight:bold;color:#009696;">asp-for</span><span style="color:#b4b4b4;">=</span><span
+style="color:#c8c8c8;">"</span>Price<span style="color:#c8c8c8;">"</span>&nbsp;<span
+style="color:#9cdcfe;">class</span><span style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span><span
+style="color:#c8c8c8;">form-control</span><span style="color:#c8c8c8;">"</span><span
+style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+style="color:gray;">&lt;</span><span style="color:gray;">/</span><span style="color:#569cd6;">div</span><span
+style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:gray;">&lt;</span><span
+style="color:gray;">/</span><span style="color:#569cd6;">div</span><span style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:gray;">&lt;</span><span
+style="color:#569cd6;">div</span>&nbsp;<span style="color:#9cdcfe;">class</span><span
+style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span><span style="color:#c8c8c8;">modal-footer</span><span
+style="color:#c8c8c8;">"</span><span style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+style="color:gray;">&lt;</span><span style="color:#569cd6;">button</span>&nbsp;<span
+style="color:#9cdcfe;">type</span><span style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span><span
+style="color:#c8c8c8;">button</span><span style="color:#c8c8c8;">"</span>&nbsp;<span
+style="color:#9cdcfe;">class</span><span style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span><span
+style="color:#c8c8c8;">btn</span><span style="color:#c8c8c8;">&nbsp;btn-primary</span><span
+style="color:#c8c8c8;">"</span>&nbsp;<span style="color:#9cdcfe;">data-bs-dismiss</span><span
+style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span>modal<span style="color:#c8c8c8;">"</span>&nbsp;<span
+style="color:#9cdcfe;">id</span><span style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span><span
+style="color:#c8c8c8;">save-car</span><span style="color:#c8c8c8;">"</span><span
+style="color:gray;">&gt;</span>Save&nbsp;changes<span style="color:gray;">&lt;</span><span
+style="color:gray;">/</span><span style="color:#569cd6;">button</span><span style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+style="color:gray;">&lt;</span><span style="color:#569cd6;">button</span>&nbsp;<span
+style="color:#9cdcfe;">type</span><span style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span><span
+style="color:#c8c8c8;">button</span><span style="color:#c8c8c8;">"</span>&nbsp;<span
+style="color:#9cdcfe;">class</span><span style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span><span
+style="color:#c8c8c8;">btn</span><span style="color:#c8c8c8;">&nbsp;btn-secondary</span><span
+style="color:#c8c8c8;">"</span>&nbsp;<span style="color:#9cdcfe;">data-bs-dismiss</span><span
+style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span>modal<span style="color:#c8c8c8;">"</span><span
+style="color:gray;">&gt;</span>Close<span style="color:gray;">&lt;</span><span style="color:gray;">/</span><span
+style="color:#569cd6;">button</span><span style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:gray;">&lt;</span><span
+style="color:gray;">/</span><span style="color:#569cd6;">div</span><span style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:gray;">&lt;</span><span
+style="color:gray;">/</span><span style="color:#569cd6;">div</span><span style="color:gray;">&gt;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:gray;">&lt;</span><span style="color:gray;">/</span><span
+style="color:#569cd6;">div</span><span style="color:gray;">&gt;</span>
+<span style="color:gray;">&lt;</span><span style="color:gray;">/</span><span style="color:#569cd6;">div</span><span
+style="color:gray;">&gt;</span></pre>
+      <p>The model for this file is a <code>Car</code>. To avoid having to use
+        the fully qualified reference to the <code>Car</code> type, we add a <code>using</code>
+        directive to the <i>_ViewImports</i> file:</p>
+      <pre style="padding:5px;font-family:Cascadia Mono;font-size:13px;color:gainsboro;background:#1e1e1e;"><span
+style="color:#a699e6;">@</span><span style="color:#569cd6;">using</span>&nbsp;MinimalAPIs<span
+style="color:#b4b4b4;">.</span>Models
+</pre>
+      <p>We use the <a href="https://www.learnrazorpages.com/razor-pages/tag-helpers/partial-tag-helper">partial
+          tag helper</a> to include the partial in the page, passing a new
+        instance of <code>Car</code> to the model:</p>
+      <pre style="padding:5px;font-family:Cascadia Mono;font-size:13px;color:gainsboro;background:#1e1e1e;"><span
+style="color:gray;">&lt;</span><span style="font-weight:bold;color:#009696;">partial</span>&nbsp;<span
+style="font-weight:bold;color:#009696;">name</span><span style="color:#b4b4b4;">=</span><span
+style="color:#c8c8c8;">"</span><span style="color:#c8c8c8;">_CarModal</span><span
+style="color:#c8c8c8;">"</span>&nbsp;<span style="font-weight:bold;color:#009696;">model</span><span
+style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span><span style="color:#569cd6;">new</span>&nbsp;<span
+style="color:#4ec9b0;">Car</span>()<span style="color:#c8c8c8;">"</span><span style="color:gray;">/</span><span
+style="color:gray;">&gt;</span>
+</pre>
+      <p>Now let's implement the JavaScript <code>getCar</code> method that is
+        called by the click event handlers on the list items:</p>
+      <pre style="padding:5px;font-family:Cascadia Mono;font-size:13px;color:gainsboro;background:#1e1e1e;"><span
+style="color:#569cd6;">const</span>&nbsp;getCar&nbsp;=&nbsp;(id)&nbsp;<span style="color:#569cd6;">=&gt;</span>&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;fetch(<span style="color:#d69d85;">`/api/car/</span><span
+style="color:#d69d85;">${</span>id<span style="color:#d69d85;">}</span><span style="color:#d69d85;">`</span>)
+&nbsp;&nbsp;&nbsp;&nbsp;.then(response&nbsp;<span style="color:#569cd6;">=&gt;</span>&nbsp;response.json())
+&nbsp;&nbsp;&nbsp;&nbsp;.then(car&nbsp;<span style="color:#569cd6;">=&gt;</span>&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;document.getElementById(<span style="color:#d69d85;">'Id'</span>).value&nbsp;=&nbsp;car.id;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;document.getElementById(<span style="color:#d69d85;">'Model'</span>).value&nbsp;=&nbsp;car.model;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;document.getElementById(<span style="color:#d69d85;">'Make'</span>).value&nbsp;=&nbsp;car.make;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;document.getElementById(<span style="color:#d69d85;">'Year'</span>).value&nbsp;=&nbsp;car.year;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;document.getElementById(<span style="color:#d69d85;">'Doors'</span>).value&nbsp;=&nbsp;car.doors;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;document.getElementById(<span style="color:#d69d85;">'Color'</span>).value&nbsp;=&nbsp;car.color;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;document.getElementById(<span style="color:#d69d85;">'Price'</span>).value&nbsp;=&nbsp;car.price;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;});
+}</pre>
+      <p>This method makes a <code>Fetch</code> request to a new API endpoint
+        at <code>/api/car/</code>, passing in the <code>Id</code> of the
+        specific car obtained from the <code>data-id</code> attribute that was
+        added to the list item when it was generated. The returned <code>Car</code>
+        has its properties assigned to form controls in the modal. We need to
+        define that endpoint and get it to return a <code>Car</code> instance,
+        serialised to JSON. the following is added to <i>Program.cs</i>, just
+        after the previous API:</p>
+      <pre style="padding:5px;font-family:Cascadia Mono;font-size:13px;color:gainsboro;background:#1e1e1e;">app<span
+style="color:#b4b4b4;">.</span><span style="color:#dcdcaa;">MapGet</span>(<span
+style="color:#d69d85;">"/api/car/{id:int}"</span>,&nbsp;(<span style="color:#569cd6;">int</span>&nbsp;<span
+style="color:#9cdcfe;">id</span>,&nbsp;ICarService&nbsp;<span style="color:#9cdcfe;">service</span>)&nbsp;<span
+style="color:#b4b4b4;">=&gt;</span>
+{
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">var</span>&nbsp;<span style="color:#9cdcfe;">car</span>&nbsp;<span
+style="color:#b4b4b4;">=</span>&nbsp;service<span style="color:#b4b4b4;">.</span><span
+style="color:#dcdcaa;">Get</span>(id);
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#d8a0df;">return</span>&nbsp;car;
+});</pre>
+      <p>The route template takes a parameter representing a route value, just
+        like the <a href="https://www.learnrazorpages.com/razor-pages/routing#route-templates">rest
+          of Razor Pages</a>. The <a href="https://www.learnrazorpages.com/razor-pages/routing#adding-constraints">parameter
+          can optionally be constrained</a>. This time, the return type of the
+        API is a simple object rather than an <code>IResult</code>. By default,
+        this will be serialised to JSON. Once all of this has been added, we can
+        run the application, click the <strong>Get Cars</strong> button, and
+        then click on a car in the list and see its details appear in the modal:</p>
+      <p><img src="https://www.mikesdotnetting.com/images/2021-12-14_08-37-16.png"
+          alt="Razor Pages Minimal APIs"> </p>
+      <p>At the moment, the <strong>Save Changes</strong> button doesn't do
+        anything other than close the modal. So we will add a reference to it in
+        the script block:</p>
+      <pre style="padding:5px; font-family:Cascadia Mono;font-size:13px;color:gainsboro;background:#1e1e1e;"><span
+style="color:#569cd6;">const</span>&nbsp;save&nbsp;=&nbsp;document.getElementById(<span
+style="color:#d69d85;">'save-car'</span>);
+</pre>
+      <p>Then we wire up an event listener that calls a <code>saveCar</code>
+        method:</p>
+      <pre style="padding:5px;font-family:Cascadia Mono;font-size:13px;color:gainsboro;background:#1e1e1e;">save.addEventListener(<span
+style="color:#d69d85;">'click'</span>,&nbsp;()&nbsp;<span style="color:#569cd6;">=&gt;</span>&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;saveCar();
+});</pre>
+      <p>Then we add the <code>saveCar</code> method to the script block:</p>
+      <pre style="padding:5px;font-family:Cascadia Mono;font-size:13px;color:gainsboro;background:#1e1e1e;"><span
+style="color:#569cd6;">const</span>&nbsp;saveCar&nbsp;=&nbsp;()&nbsp;<span style="color:#569cd6;">=&gt;</span>&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#569cd6;">const</span>&nbsp;model&nbsp;=&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;id:&nbsp;&nbsp;document.getElementById(<span
+style="color:#d69d85;">'Id'</span>).value,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;model:&nbsp;document.getElementById(<span
+style="color:#d69d85;">'Model'</span>).value,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;make:&nbsp;document.getElementById(<span
+style="color:#d69d85;">'Make'</span>).value,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;year:&nbsp;document.getElementById(<span
+style="color:#d69d85;">'Year'</span>).value,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;doors:&nbsp;document.getElementById(<span
+style="color:#d69d85;">'Doors'</span>).value,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;color:&nbsp;document.getElementById(<span
+style="color:#d69d85;">'Color'</span>).value,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;price:&nbsp;document.getElementById(<span
+style="color:#d69d85;">'Price'</span>).value,
+&nbsp;&nbsp;&nbsp;&nbsp;};
+&nbsp;&nbsp;&nbsp;&nbsp;fetch(<span style="color:#d69d85;">'/api/save'</span>,&nbsp;&nbsp;{&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;method:&nbsp;model.id&nbsp;&gt;&nbsp;0&nbsp;?&nbsp;<span
+style="color:#d69d85;">'put'</span>&nbsp;:&nbsp;<span style="color:#d69d85;">'post'</span>,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;headers:&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#d69d85;">"Content-type"</span>:&nbsp;<span
+style="color:#d69d85;">"application/json"</span>,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;body:&nbsp;JSON.stringify(model)
+&nbsp;&nbsp;&nbsp;&nbsp;});
+}</pre>
+      <p>This method obtains values from the modal form and creates a model. The
+        model is converted to a JSON string before it is passed to the body of a
+        <code>Fetch</code> request. the content type is specified as JSON and
+        the method used for the request depends on whether the model has an <code>Id</code>
+        value greater than zero. If it does, we are editing a car and use the <code>PUT</code>
+        method. Otherwise it's a new car so we use the <code>POST</code>
+        method. This differentiation isn't essential, but it conforms to best
+        practice for RESTful services, and it helps to illustrate another
+        feature of the minimal request handler - the ability to support multiple
+        HTTP methods.</p>
+      <p>Here is the handler defined for the <code>/api/save </code>route:</p>
+      <pre style="padding:5px;font-family:Cascadia Mono;font-size:13px;color:gainsboro;background:#1e1e1e;">app<span
+style="color:#b4b4b4;">.</span><span style="color:#dcdcaa;">MapMethods</span>(<span
+style="color:#d69d85;">"/api/save"</span>,&nbsp;<span style="color:#569cd6;">new</span>[]&nbsp;{<span
+style="color:#d69d85;">"POST"</span>,&nbsp;<span style="color:#d69d85;">"PUT"</span>},&nbsp;(Car&nbsp;<span
+style="color:#9cdcfe;">car</span>,&nbsp;ICarService&nbsp;<span style="color:#9cdcfe;">service</span>)&nbsp;<span
+style="color:#b4b4b4;">=&gt;</span>
+{
+&nbsp;&nbsp;&nbsp;&nbsp;service<span style="color:#b4b4b4;">.</span><span style="color:#dcdcaa;">Save</span>(car);
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#d8a0df;">return</span>&nbsp;Results<span
+style="color:#b4b4b4;">.</span><span style="color:#dcdcaa;">Ok</span>();
+});</pre>
+      <p>This time, we use <code>MapMethods</code> to register the request
+        handler, which enables us to define the HTTP methods that this handler
+        supports. These are specified in the array that we pass into the second
+        parameter, so this request handler supports both the <code>POST</code>
+        and <code>PUT</code> methods. <br>
+      </p>
+      <p>One final step remains, and that is to add a button that invokes the
+        modal form with empty inputs so that we can add new cars:</p>
+      <pre style="font-family:Cascadia Mono;font-size:13px;color:gainsboro;background:#1e1e1e;"><span
+style="color:gray;">&lt;</span><span style="color:#569cd6;">button</span>&nbsp;<span
+style="color:#9cdcfe;">class</span><span style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span><span
+style="color:#c8c8c8;">btn</span><span style="color:#c8c8c8;">&nbsp;btn-success</span><span
+style="color:#c8c8c8;">"</span>&nbsp;<span style="color:#9cdcfe;">data-bs-toggle</span><span
+style="color:#b4b4b4;">=</span><span style="color:#c8c8c8;">"</span>modal<span style="color:#c8c8c8;">"</span>&nbsp;<span
+style="color:#9cdcfe;">data-bs-target</span><span style="color:#b4b4b4;">=</span><span
+style="color:#c8c8c8;">"</span>#car-modal<span style="color:#c8c8c8;">"</span><span
+style="color:gray;">&gt;</span>New&nbsp;Car<span style="color:gray;">&lt;</span><span
+style="color:gray;">/</span><span style="color:#569cd6;">button</span><span style="color:gray;">&gt;</span>
+</pre>
+      <h3>Summary</h3>
+      <p>I've only scratched the surface in this introduction, but minimal API
+        request handlers are great for working with JSON in a .NET 6 Razor Pages
+        application. They are lightweight and fast, and save you having to
+        configure Web API controllers or hacking away at returning JsonResults
+        in from a page handler method. </p>
+      <p>The code for this article is available at <a href="https://github.com/mikebrind/MinimalAPIs">https://github.com/mikebrind/MinimalAPIs</a>.<br>
+      </p>
+      <p><br>
+      </p>
+      <p></p>
+    </article>
   </body>
 </html>
